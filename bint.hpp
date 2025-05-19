@@ -29,7 +29,6 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 // project status - TODO
 ///////////////////////////////////////////////////////////////////////////////////////
-// implementar uma classe de erro básica
 // implementar a classe de erro criada no padrão - libutilhpp
 // fazer o stacktrace da classe bint
 // implementar uma versão de representação do bint 1 e -1 otimizados
@@ -447,16 +446,27 @@ Iterator_Size_t::operator--()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+// bint internal types
+/////////////////////////////////////////////////////////////////////////////////////// 
+/**
+ * Foi utilizado um alias, nos tipos fundamentais para que se possa se alterar a base da clase sem transtornos adicionais, já que várias operações demandam o tamanho do tipo (32, 64 bits, por exemplo).
+ * A escolha da base da classe ser de 32 bits e não de 64bits, é porque várias operações são mais eficientes utilizando 32bits do que 64bits, devido ao overflow que gera, e são operações já feitas em hardware ao invés ter que implementar elas: ex: multiplicação, adição, subtração, potenciação, etc...
+ */
+using bint_base_t = uint_least32_t; // base = base do bint
+using bint_uopr_t = uint_least64_t; // uopr = unsigned operation type
+using bint_sopr_t = int_least64_t; // sopr = signed operation type
+
+///////////////////////////////////////////////////////////////////////////////////////
 // class bint
 ///////////////////////////////////////////////////////////////////////////////////////            
 class bint
 {
-  const static int _base_ = 256;
-  const static int _base_bit_size_ = 8; // for >> and <<
-  const static int _base_mask_ = 255; // _base_ -1 -> último número que a base suporta -> & | ^, etc..
-  const static int _base_str_size_ = 3;
+  const static int_least64_t _base_ = 4294967296; // 2^32
+  const static int_least32_t _base_bit_size_ = 32; // for >> and <<
+  const static int_least64_t _base_mask_ = 4294967295; // _base_ -1 -> último número que a base suporta -> & | ^, etc..
+  const static int _base_str_size_ = 10;
 
-  std::vector<unsigned char> _number_;
+  std::vector<bint_base_t> _number_;
   size_t _virtual_number_size_ = 0;
   bool _is_negative_ = false;
   bool _is_zero_ = true;
@@ -467,20 +477,24 @@ class bint
   ///////////////////////////////////////////////////////////////////////////////////////
     bint() {};
     
-    inline bint(const int number);
-    inline bint(const long number);
-    inline bint(const long long number);
-    inline bint(const unsigned int number);
-    inline bint(const unsigned long number);
-    inline bint(const unsigned long long number);
+    // inline bint(const int number);
+    // inline bint(const long number);
+    // inline bint(const long long number);
+    // inline bint(const unsigned int number);
+    // inline bint(const unsigned long number);
+    // inline bint(const unsigned long long number);
+    inline bint(const int_least32_t number);
+    inline bint(const int_least64_t number);
+    inline bint(const uint_least32_t number);
+    inline bint(const uint_least64_t number);
     /**
      * @arg str_number_empty: se o @arg(number) for empty, então o valor do bint será o valor do @arg(str_number_empty).
      */
-    inline bint(const std::string& number, const long long str_number_empty = 0);
+    inline bint(const std::string& number, const int_least64_t str_number_empty = 0);
     /**
      * @arg number_null: se o @arg(number) for NULL, então o valor do bint será o valor do @arg(number_null).
      */
-    inline bint(const char* number, const long long number_null = 0);
+    inline bint(const char* number, const int_least64_t number_null = 0);
     
   ///////////////////////////////////////////////////////////////////////////////////////
   // comparison operator functions ==, !=, <, >, <=, and >=
@@ -518,13 +532,13 @@ class bint
     
     
     // Div<bint, long long> inline div(const int divisor) const;
-    Div<bint, long long> ldiv(const long long divisor) const;
+    Div<bint, int_least64_t> ldiv(const int_least64_t divisor) const;
     Div<bint, bint> inline div(const bint& big_int) const {
         return div4(big_int);
     }
     
     // bint pow(const long long power) const;
-    bint inline pow(const long long power) const;
+    bint inline pow(const int_least64_t power) const;
     bint inline pow(const bint& power) const;
     
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -533,20 +547,21 @@ class bint
   bint operator&(const bint& big_int) const;
   bint operator|(const bint& big_int) const;
   bint operator^(const bint& big_int) const;
-  bint operator<<(const long long n) const;
-  bint operator>>(const long long n) const;
+  bint operator<<(const int_least64_t n) const;
+  bint operator>>(const int_least64_t n) const;
 
   inline bint& operator&=(const bint& big_int);
   inline bint& operator|=(const bint& big_int);
   inline bint& operator^=(const bint& big_int);
-  inline bint& operator<<=(const long long n);
-  inline bint& operator>>=(const long long n);
+  inline bint& operator<<=(const int_least64_t n);
+  inline bint& operator>>=(const int_least64_t n);
   
   /**
    * Essa operação varia com o tamanho do número em relação a sua representação na base do bint.
    * Em uma representação na base 256.
    * Tem-se que a operação é feita por cada "casa" ou "bloco" de representação na base 256.
    * Isso varia o resultado, pois a casa toda é negada, e não somente á o último bit significativo do número, assim, o número 1: "00000001" -> ~1 -> "11111110" = 254 e não zero.
+   * Atualmente essa negação é feita na base uint32_t.
    */
   bint operator~() const;
 //   bint& inline operator~=() const;
@@ -566,7 +581,7 @@ class bint
   Div<bint, bint> div4(const bint& big_int) const;
   Div<bint, bint> div5(const bint& big_int) const;
   
-  bint pow1(const long long power) const;
+  bint pow1(const int_least64_t power) const;
   bint pow1(const bint& power)  const;
   
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -576,13 +591,13 @@ class bint
   // ex: big_int.mul(546) + 36;
   // ex: big_int.mul(546).add(852);
   ///////////////////////////////////////////////////////////////////////////////////////
-  bint& mul(const int number);
+  bint& mul(const int_least32_t number);
   bint& add(const bint& number);
   bint& sub(const bint& number);
   bint& shift_l1(); // shift_left(1) -> de maneira otimizada
-  bint& shift_left(const long long n);
+  bint& shift_left(const int_least64_t n);
   bint& shift_r1(); // shift_right(1) -> de maneira otimizada
-  bint& shift_right(const long long n);
+  bint& shift_right(const int_least64_t n);
   inline bint& to_abs();
 
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -644,19 +659,21 @@ class bint
         return out;
     }
     
-    void inline set(const int number);
-    void inline set(const long number);
-    void inline set(const unsigned int number);
-    void inline set(const unsigned long number);
-    void set(const long long number);
-    void set(const unsigned long long number, const bool is_negative = false);
+    // void inline set(const int number);
+    // void inline set(const long number);
+    // void inline set(const unsigned int number);
+    // void inline set(const unsigned long number);
+    void inline set(const int_least32_t number);
+    void inline set(const uint_least32_t number);
+    void set(const int_least64_t number);
+    void set(const uint_least64_t number, const bool is_negative = false);
     /**
      * @arg str_number_empty: se o @arg(number) for empty, então o valor do bint será o valor do @arg(str_number_empty).
      */
-    void set(const std::string& number, const long long str_number_empty = 0);
+    void set(const std::string& number, const int_least64_t str_number_empty = 0);
     void set2(const std::string& number); // old version - inneficient version
     
-    void inline set2(const long long number); // set for long long optimized
+    void inline set2(const int_least64_t number); // set for long long optimized
     
     // bint& operator=(const bint& number);
     
@@ -831,10 +848,10 @@ class bint
     bint operator^(const TYPE& big_int) const;
 
     // template<typename TYPE>
-    // bint operator<<(const long long n) const;
+    // bint operator<<(const int_least64_t n) const;
 
     // template<typename TYPE>
-    // bint operator>>(const long long n) const;
+    // bint operator>>(const int_least64_t n) const;
 
     template<typename TYPE>
     bint& operator&=(const TYPE& big_int);
@@ -864,12 +881,17 @@ class bint
     /**
      * insere o número na última posicao do array _number_ considerando o valor de _virtual_number_size_
      * Ao final atualiza o valor de _virtual_number_size_.
-     * O número int será passado para unsigned char, por meio de static_cast<unsigned char>(number)
-     * Caso o valor de number não esteja no range de unsigned char, o comportamento é indefinido.
+     * O número do tipo TYPE @arg(number) sofrerá um static cast para a última (considerando o valor de _virtual_number_size_) posição do vector.
+     * Caso o valor de number não esteja no range de bint_base_t, o comportamento é indefinido.
+     * O valor será colocado da seguinte forma (modo abreviado, pois é feito verificações adicionais):
+     * check(.... _virtual_number_size_+1)
+     * _number_.at(_virtual_number_size_) = static_cast<bint_base_t>(number);
      * Tal se dá pois esta função é privada e não publica.
      * @obs: NÃO ATUALIZA O VALOR DE _is_zero_. -> pois se pode colocar push_back(0) -> funções binárias e outras.
      */
-    void inline push_back(const int number);
+    // void inline push_back(const int number);
+    template<typename TYPE>
+    void inline push_back(const TYPE number);
     
     /**
      * Atualiza o valor de _virtual_number_size_.
@@ -934,20 +956,21 @@ class bint
     // std::tuple<bool, Div<bint, bint>> private_div_commom_cases(const bint& divisor);
 
     /**
-     * Algoritmo para o bint::div4()
+     * Algoritmo para o bint::div4() e bint::div5()
      * Retorna os bits que correspondem ao número que será feito a subtração imediata de uma divisão do tipo "divisão longa".
-     * O número é do tipo que sempre o resultado será 1, caso não seja possível mais dividir, o resultado da divisão será 0.
-     * @result o número de bits necessários para encontrar um número em no dividendo que seja imediatamente maior que o divisor.
+     * O número é do tipo que sempre o resultado será 1.
+     * Caso não seja possível mais dividir, o resultado da divisão será 0.
+     * @result o número de bits necessários para encontrar um número no dividendo que seja imediatamente maior que o divisor.
      */
     size_t div_fill(const bint& divisor, const size_t divisor_size, const int divisor_most_signficant_bit_pos, const bint& dividend, size_t& dividend_size_pos, int& dividend_bit_pos);
-    size_t div_fill(const bint& divisor, const long long divisor_num_bits, const bint& dividend, size_t& dividend_size_pos, int& dividend_bit_pos);
-    size_t div_fill2(const bint& divisor, const long long divisor_num_bits, const bint& dividend, size_t& dividend_size_pos, int& dividend_bit_pos);
+    size_t div_fill(const bint& divisor, const int_least64_t divisor_num_bits, const bint& dividend, size_t& dividend_size_pos, int& dividend_bit_pos);
+    size_t div_fill2(const bint& divisor, const int_least64_t divisor_num_bits, const bint& dividend, size_t& dividend_size_pos, int& dividend_bit_pos);
     
     /**
      * Para conformidade com os algorítimos implementados, a posição começa em 1.
      * @return o bit (0 ou 1) da posição em @arg(pos) do bloco (deve ser um tipo básico).
      */
-    int get_bit(const unsigned int block, const int pos) const;
+    int get_bit(const uint_least32_t block, const int pos) const;
 
     /**
      * Para conformidade com os algorítimos implementados, a posição começa em 1.
@@ -958,73 +981,97 @@ class bint
      * Ex: block: "0110" (6), pos: 3 -> return: 4;
      * Ex: block: "1111" (15), pos: 3 -> return: 4;
      */
-    inline unsigned int get_bit_int(const unsigned int block, const int pos) const;
+    inline uint_least32_t get_bit_int(const uint_least32_t block, const int pos) const;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // implementation in .hpp file
 ///////////////////////////////////////////////////////////////////////////////////////
-bint::bint(const int number) {
-    set2(static_cast<long long>(number));
+// bint::bint(const int number) {
+//     set2(static_cast<int_least64_t>(number));
+// }
+
+// bint::bint(const long number) {
+//     set2(static_cast<int_least64_t>(number));
+// }
+
+// bint::bint(const long long number) {
+//     set2(number);
+// }
+
+// bint::bint(const unsigned int number) {
+//     set(static_cast<uint_least64_t>(number));
+// }
+
+// bint::bint(const unsigned long number) {
+//     set(static_cast<uint_least64_t>(number));
+// }
+
+// bint::bint(const unsigned long long number) {
+//     set(number);
+// }
+
+bint::bint(const int_least32_t number) {
+    set(static_cast<int_least64_t>(number));
 }
 
-bint::bint(const long number) {
-    set2(static_cast<long long>(number));
-}
-
-bint::bint(const long long number) {
-    set2(number);
-}
-
-bint::bint(const unsigned int number) {
-    set(static_cast<unsigned long long>(number));
-}
-
-bint::bint(const unsigned long number) {
-    set(static_cast<unsigned long long>(number));
-}
-
-bint::bint(const unsigned long long number) {
+bint::bint(const int_least64_t number) {
     set(number);
 }
 
-void bint::set(const int number) {
-    set2(static_cast<long long>(number));
+bint::bint(const uint_least32_t number) {
+    set(static_cast<uint_least64_t>(number));
 }
 
-void bint::set(const long number) {
-    set2(static_cast<long long>(number));
+bint::bint(const uint_least64_t number) {
+    set(number);
 }
 
-void bint::set2(const long long number) {
+// void bint::set(const int number) {
+//     set2(static_cast<int_least64_t>(number));
+// }
+
+// void bint::set(const long number) {
+//     set2(static_cast<int_least64_t>(number));
+// }
+
+void bint::set(const int_least32_t number) {
+    set(static_cast<int_least64_t>(number));
+}
+
+void bint::set(const uint_least32_t number) {
+    set(static_cast<uint_least64_t>(number));
+}
+
+void bint::set2(const int_least64_t number) {
     if(number == 0) {
         return set_zero();
     }
     
-    long long n = number;
+    int_least64_t n = number;
     if(number < 0) {
         n = -1*n;
-        set(static_cast<unsigned long long>(n), true);
+        set(static_cast<uint_least64_t>(n), true);
         
     } else {
-        set(static_cast<unsigned long long>(n));
+        set(static_cast<uint_least64_t>(n));
     }
 }
 
-void bint::set(const unsigned int number) {
-    set(static_cast<unsigned long long>(number));
-}
+// void bint::set(const unsigned int number) {
+//     set(static_cast<uint_least64_t>(number));
+// }
 
-void bint::set(const unsigned long number) {
-    set(static_cast<unsigned long long>(number));
-}
+// void bint::set(const unsigned long number) {
+//     set(static_cast<uint_least64_t>(number));
+// }
 
-bint::bint(const std::string& number, const long long str_number_empty) {
+bint::bint(const std::string& number, const int_least64_t str_number_empty) {
     set(number, str_number_empty);
 }
 
-bint::bint(const char* number, const long long number_null) {
-    if(number == nullptr) {
+bint::bint(const char* number, const int_least64_t number_null) {
+    if(number == nullptr ) {
         set(number_null);
     } else {
         set(static_cast<std::string>(number));
@@ -1155,17 +1202,17 @@ bint& bint::operator^=(const bint& big_int) {
     return *this;
 }
 
-bint& bint::operator<<=(const long long n) {
+bint& bint::operator<<=(const int_least64_t n) {
     *this = this->operator<<(n);
     return *this;
 }
 
-bint& bint::operator>>=(const long long n) {
+bint& bint::operator>>=(const int_least64_t n) {
     *this = this->operator>>(n);
     return *this;
 }
 
-bint bint::pow(const long long power) const {
+bint bint::pow(const int_least64_t power) const {
     return pow1(power);
 }
 
@@ -1186,13 +1233,6 @@ bint& bint::to_abs() {
         _is_negative_ = false;
     }
     return *this;
-}
-
-void bint::push_back(const int number) {
-    const auto last_id = _virtual_number_size_;
-    increment_virtual_number_size();
-    // typename std::decay<decltype(_number_.at(0))>::type -> devolve o tipo que é o array, no caso: unsigned char
-    _number_.at(last_id) = static_cast<typename std::decay<decltype(_number_.at(0))>::type>(number);
 }
 
 void bint::update_virtual_number_size(const size_t begin) {
@@ -1261,6 +1301,19 @@ bint bint::abs() const {
 
 bool bint::to_bool() const {
     return zero() == true ? false : true; // return !zero();
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+// implementation in .hpp file
+// template functions - private functions
+///////////////////////////////////////////////////////////////////////////////////////
+template<typename TYPE>
+void bint::push_back(const TYPE number) {
+    const auto last_id = _virtual_number_size_;
+    increment_virtual_number_size();
+    // typename std::decay<decltype(_number_.at(0))>::type -> devolve o tipo que é o array, no caso: unsigned char
+    _number_.at(last_id) = static_cast<bint_base_t>(number);
 }
 
 template<typename TYPE>
@@ -1602,18 +1655,23 @@ template<typename TYPE>
 bint bint::pow(const TYPE& big_int) const {
     check_template_arg_is_supported(big_int);
     
-    if constexpr(std::is_same<TYPE, char>::value) {
-		return pow(static_cast<long long>(big_int));
-	} else if constexpr(std::is_same<TYPE, unsigned char>::value) {
-	    return pow(static_cast<long long>(big_int));
-	} else if constexpr(std::is_same<TYPE, int>::value) {
-	    return pow(static_cast<long long>(big_int));
-	} else if constexpr(std::is_same<TYPE, unsigned int>::value) {
-	    return pow(static_cast<long long>(big_int));
-	} else if constexpr(std::is_same<TYPE, long>::value) {
-	    return pow(static_cast<long long>(big_int));
-	} else if constexpr(std::is_same<TYPE, long long>::value) {
-	    return pow(static_cast<long long>(big_int));
+    // if constexpr(std::is_same<TYPE, char>::value) {
+	// 	return pow(static_cast<int_least64_t>(big_int));
+	// } else if constexpr(std::is_same<TYPE, unsigned char>::value) {
+	//     return pow(static_cast<int_least64_t>(big_int));
+	// } else if constexpr(std::is_same<TYPE, int>::value) {
+	//     return pow(static_cast<int_least64_t>(big_int));
+	// } else if constexpr(std::is_same<TYPE, unsigned int>::value) {
+	//     return pow(static_cast<int_least64_t>(big_int));
+	// } else if constexpr(std::is_same<TYPE, long>::value) {
+	//     return pow(static_cast<int_least64_t>(big_int));
+	// } else if constexpr(std::is_same<TYPE, long long>::value) {
+	//     return pow(static_cast<int_least64_t>(big_int));
+    // }
+    if constexpr(std::is_same<TYPE, int_least32_t>::value) {
+		return pow(static_cast<int_least64_t>(big_int));
+	} else if constexpr(std::is_same<TYPE, uint_least32_t>::value) {
+	    return pow(static_cast<int_least64_t>(big_int));
     }
 
     bint n (big_int);

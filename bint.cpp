@@ -3,36 +3,53 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 // implementation in .cpp file
 ///////////////////////////////////////////////////////////////////////////////////////
-void bint::set(const long long number) {
+void bint::set(const int_least64_t number) {
     set_zero(); // seta o número para zero
     
     if(number == 0) {
         return;
     }
     _is_zero_ = false;
-    
-    if(number < 0) {
-        _is_negative_ = true;
-    }
-    
     if(_number_.empty()) {
         _number_.resize(256);
     }
-    
-    auto quotient = number < 0 ? -1*number : number;
-    auto division = std::lldiv(quotient, this->_base_);
-    push_back(division.rem);
-    
-    if(division.quot != 0) {
-    
-        while(division.quot != 0) {
-            division = std::lldiv(division.quot, this->_base_);
-            push_back(division.rem);
-        }
+
+    if(number == 1) {
+        push_back(1);
+        return;
     }
+    if(number == -1) {
+        push_back(1);
+        _is_negative_ = true;
+        return;
+    }
+    
+    // otimização em relação ao código embaixo
+    auto unumber = number;
+    if(number < 0) {
+        _is_negative_ = true;
+        unumber *= -1;
+    }
+
+    push_back(unumber);
+    unumber = unumber >> _base_bit_size_;
+    if(unumber != 0) {
+        push_back(unumber);
+    }
+
+    
+    // auto quotient = number < 0 ? -1*number : number;
+    // auto division = std::lldiv(quotient, this->_base_);
+    // push_back(division.rem);
+    // if(division.quot != 0) {
+    //     while(division.quot != 0) {
+    //         division = std::lldiv(division.quot, this->_base_);
+    //         push_back(division.rem);
+    //     }
+    // }
 }
 
-void bint::set(const unsigned long long number, const bool is_negative) {
+void bint::set(const uint_least64_t number, const bool is_negative) {
     set_zero(); // seta o número para zero
     
     if(number == 0) {
@@ -48,25 +65,36 @@ void bint::set(const unsigned long long number, const bool is_negative) {
     if(_number_.empty()) {
         _number_.resize(256);
     }
-    
-    const int size = sizeof(unsigned long long);
-    
-    unsigned long long num = number;
-    for(int i=0; i < size; ++i) {
-        const int r = static_cast<int>(num & _base_mask_);
-        push_back(r);
-        
-        num = num >> _base_bit_size_; // considera 1 byte = 8 bits
+
+    if(number == 1) {
+        _number_.at(0) = 1;
+        _virtual_number_size_ = 1;
+        return;
+    }
+
+    push_back(number);
+    const auto overflow = number >> _base_bit_size_;
+    if(overflow != 0) {
+        push_back(overflow);
     }
     
-    // atualiza o valor de _virtual_number_size_
-    // show("B::vns: ",_virtual_number_size_,"\n");
-    for(int i = size-1; i > -1; --i) {
-        if(_number_.at(i) != 0) {
-            _virtual_number_size_ = i+1;
-            break;
-        }
-    }
+
+    // antiga versão
+    // const int size = sizeof(unsigned long long);
+    // unsigned long long num = number;
+    // for(int i=0; i < size; ++i) {
+    //     const int r = static_cast<int>(num & _base_mask_);
+    //     push_back(r);
+    //     num = num >> _base_bit_size_; // considera 1 byte = 8 bits
+    // }
+    // // atualiza o valor de _virtual_number_size_
+    // // show("B::vns: ",_virtual_number_size_,"\n");
+    // for(int i = size-1; i > -1; --i) {
+    //     if(_number_.at(i) != 0) {
+    //         _virtual_number_size_ = i+1;
+    //         break;
+    //     }
+    // }
     // show("A::vns: ",_virtual_number_size_,"\n");
 }
 
@@ -75,53 +103,54 @@ void bint::set(const unsigned long long number, const bool is_negative) {
  * @obs: são considerados números na base 10.
  */
 void bint::set2(const std::string& number) {
-    set_zero(); // reset number
+    return set(number);
+    // not working anymore.
+    // set_zero(); // reset number
     
-    if(number.empty() == true) {
-        show("ERROR: LINE: ",__LINE__,"\n");
-        exit(EXIT_FAILURE);
-    }
+    // if(number.empty() == true) {
+    //     show("ERROR: LINE: ",__LINE__,"\n");
+    //     exit(EXIT_FAILURE);
+    // }
     
-    // verifica se o número de fato é uma string que representa um número inteiro
-    if(is_string_integer_number(number) == false) {
-        show("ERROR - string is not a number. - string: '",number,"' - line: ", __LINE__,"\n");
-        exit(EXIT_FAILURE);
-    } 
+    // // verifica se o número de fato é uma string que representa um número inteiro
+    // if(is_string_integer_number(number) == false) {
+    //     show("ERROR - string is not a number. - string: '",number,"' - line: ", __LINE__,"\n");
+    //     exit(EXIT_FAILURE);
+    // } 
     
-    if(number == "0") {
-        return;
-    } else {
-        _is_zero_ = false;
-    }
+    // if(number == "0") {
+    //     return;
+    // } else {
+    //     _is_zero_ = false;
+    // }
     
-    if(_number_.empty()) {
-        _number_.resize(256);
-    }
+    // if(_number_.empty()) {
+    //     _number_.resize(256);
+    // }
     
-    /////////////////////////////////////////////////////////////////
-    // verifica se o número é negativo
-    /////////////////////////////////////////////////////////////////
-    size_t init_copy = 0;
-    if(number.front() == '-') {
-        init_copy = 1;
-        _is_negative_ = true;  // seta o número como negativo
-    }
+    // /////////////////////////////////////////////////////////////////
+    // // verifica se o número é negativo
+    // /////////////////////////////////////////////////////////////////
+    // size_t init_copy = 0;
+    // if(number.front() == '-') {
+    //     init_copy = 1;
+    //     _is_negative_ = true;  // seta o número como negativo
+    // }
     
-    /////////////////////////////////////////////////////////////////
-    // realiza a divisão propriamente
-    /////////////////////////////////////////////////////////////////
-    // _virtual_number_size_ = 0; // é resetado devido a função set_zero()
-    std::string num = number.substr(init_copy);
-    do {
-        auto result = div_str_by_256(num);
-        num = result.quot;
-        _number_.at(_virtual_number_size_) = static_cast<unsigned char>(result.rem);
-        increment_virtual_number_size();
-    } while(num != "0");
-    
+    // /////////////////////////////////////////////////////////////////
+    // // realiza a divisão propriamente
+    // /////////////////////////////////////////////////////////////////
+    // // _virtual_number_size_ = 0; // é resetado devido a função set_zero()
+    // std::string num = number.substr(init_copy);
+    // do {
+    //     auto result = div_str_by_256(num);
+    //     num = result.quot;
+    //     _number_.at(_virtual_number_size_) = static_cast<unsigned char>(result.rem);
+    //     increment_virtual_number_size();
+    // } while(num != "0");
 }
 
-void bint::set(const std::string& number, const long long str_number_empty) {
+void bint::set(const std::string& number, const int_least64_t str_number_empty) {
     set_zero(); // reset number
     
     if(number.empty() == true) {
@@ -164,8 +193,8 @@ void bint::set(const std::string& number, const long long str_number_empty) {
         }
         
         const int digit = static_cast<int>(*it) - '0';
-        int overflow_10 = 0;
-        int overflow    = 0;
+        uint_least64_t overflow_10 = 0;
+        uint_least64_t overflow    = 0;
         size_t i = 0;
         for(; i < ten_power._virtual_number_size_; ++i) {
             if(i >= _number_.size()) {
@@ -177,14 +206,17 @@ void bint::set(const std::string& number, const long long str_number_empty) {
                 continue;
             }
             
-            const int a = digit * ten_power._number_.at(i) + overflow_10;
-            const int b = a & _base_mask_;
+            const auto ten_power64bts = static_cast<int_least64_t>(ten_power._number_.at(i));
+            const auto a = digit*ten_power64bts + overflow_10;
+            const auto b = a & _base_mask_;
             overflow_10 = a >> _base_bit_size_;
             
-            const int r1 = b + _number_.at(i) + overflow;
-            const int r2 = r1 & _base_mask_;
+            const auto n64bts = static_cast<int_least64_t>(_number_.at(i));
+            const auto r1 = b + n64bts + overflow;
+            // const auto r2 = r1 & _base_mask_; // não é necessário - pois o = considera somente os _base_bit_size_ primeiros dígitos
             overflow = r1 >> _base_bit_size_;
-            _number_.at(i) = r2;
+            _number_.at(i) = r1; // == _number_.at(i) = r2;
+            // _number_.at(i) = r2;
         }
         
         while(overflow > 0 || overflow_10 > 0) {
@@ -192,16 +224,16 @@ void bint::set(const std::string& number, const long long str_number_empty) {
                 _number_.resize(i+256, 0);
             }
             
-            const int r = _number_.at(i) + overflow_10 + overflow;
-            const int r1 = r & _base_mask_;
-            overflow = r1 >> _base_bit_size_;
+            const auto r = _number_.at(i) + overflow_10 + overflow;
+            // const auto r1 = r & _base_mask_;
+            overflow = r >> _base_bit_size_;
             overflow_10 = overflow_10 >> _base_bit_size_;
-            _number_.at(i) = r1;
+            _number_.at(i) = r; // == _number_.at(i) = r1;
+            // _number_.at(i) = r1;
             ++i; // atualiza o i
         }
     }
-    
-    
+
     update_virtual_number_size();
     if(zero()) {
         throw binterror("number here must NOT be zero. number: ",number);
@@ -418,13 +450,9 @@ void bint::print_in() const {
     } else {
         // for(size_t i = _virtual_number_size_ -1; i > 0; --i) {
         for(size_t i = _number_.size() -1; i > 0; --i) {
-            const int z = static_cast<int>(_number_.at(i));
-            // show("[",i,":",z,"]");
-            show("[",z,"]");
+            show("[",_number_.at(i),"]");
         }
-        const int z = static_cast<int>(_number_.at(0));
-        // show("[",0,":",z,"]");
-        show("[",z,"]");
+        show("[",_number_.at(0),"]");
     }
     show("\n");
 }
@@ -540,11 +568,11 @@ Div<bint, int> bint::div_by_10() const {
     /////////////////////////////////////////////////////////////////
     // realiza a primeira iteração da divisão
     /////////////////////////////////////////////////////////////////
-    Iterator_Size_t pos (_virtual_number_size_, _virtual_number_size_ -1);
-    const auto res1 = std::div(static_cast<int>(_number_.at(pos())), 10);
+    size_t pos = _virtual_number_size_ -1;
+    const auto res1 = std::lldiv(static_cast<int_least64_t>(_number_.at(pos)), 10);
     decltype(_number_) quot;
     if(res1.quot != 0) { // o primeiro número do quociente não pode ser zero
-        quot.push_back(static_cast<decltype(_number_.at(0))>(res1.quot)); // necessárimente menor que 256
+        quot.push_back(res1.quot); // necessárimente menor que 32bits
     }
     int overflow = res1.rem;
     --pos;
@@ -552,54 +580,15 @@ Div<bint, int> bint::div_by_10() const {
     /////////////////////////////////////////////////////////////////
     // realiza as outras iterações da divisão
     /////////////////////////////////////////////////////////////////
-    while(pos.end() == false) {
-        /**
-         * overflow << 8 => overflow*256
-         * necessário para o cálculo do valor correto para a divisão na base 256.
-         */
-        
-        int_least64_t dividend = static_cast<int_least64_t>(overflow);
+    for(; pos != -1; --pos) {
+        auto dividend = static_cast<int_least64_t>(overflow);
         dividend = dividend << _base_bit_size_;
-        dividend = dividend + static_cast<int_least64_t>(_number_.at(pos()));
-        if(pos.end() == false) --pos; // atualiza pos -> pos > 0 == pos != 0
-        
-        if(dividend >= 10 && pos.end() == false) {
-            for(int i = 0; i < 6 && pos.end() == false; ++i) {
-                dividend = dividend << _base_bit_size_;
-                dividend = dividend + static_cast<int_least64_t>(_number_.at(pos()));
-                --pos;
-            }
-        }
+        dividend = dividend + static_cast<int_least64_t>(_number_.at(pos));
         
         auto result = std::lldiv(dividend, 10);
         overflow = static_cast<int>(result.rem); // pega o resto
         
-        // show("\nresult::quot: ",result.quot," | rem: ",result.rem,"\n");
-        
-        decltype(_number_) quot_part = {0, 0, 0, 0, 0, 0, 0};
-        for(int i = 0; i < static_cast<int>(quot_part.size()); ++i) {
-            quot_part.at(i) = result.quot & _base_mask_;
-            result.quot = result.quot >> _base_bit_size_;
-        }
-        
-        // show("quot_part::\n");
-        // for(int i=0; i < quot_part.size(); ++i) {
-        //     show("[",i,":",((int)quot_part.at(i)),"], ");
-        // }
-        // show("\n");
-        
-        int init = quot_part.size() -1;
-        for(; init > -1; --init) {
-            if(quot_part.at(init) != 0) break;
-        }
-        
-        if(init == -1) {
-            quot.push_back(0);
-        } else {
-            for(; init > -1; --init) {
-                quot.push_back(quot_part.at(init));
-            }
-        }
+        quot.push_back(static_cast<uint_least32_t>(result.quot));
     }
     
     /////////////////////////////////////////////////////////////////
@@ -611,8 +600,8 @@ Div<bint, int> bint::div_by_10() const {
     } 
     else { // bi_quot != 0
         bi_quot._virtual_number_size_ = 0;
-        for(pos.set_reverse(quot.size()); pos.end() == false; --pos) {
-            bi_quot._number_.push_back(quot.at(pos()));
+        for(size_t i=quot.size()-1; i != -1; --i) {
+            bi_quot._number_.push_back(quot.at(i));
             // bi_quot.push_back(quot.at(pos()));
         }
         bi_quot._is_negative_ = _is_negative_;
@@ -623,7 +612,7 @@ Div<bint, int> bint::div_by_10() const {
     
     // show("\n=============================\nquot:\n");
     // show("quot.size(): ",quot.size(),"\n");
-    // for(int i=0; i < quot.size(); ++i) { show("[",static_cast<int>(quot.at(i)),"], "); }
+    // for(int i=0; i < quot.size(); ++i) { show("[",quot.at(i),"], "); }
     // show("\n=============================\nbi_quot:sss\n");
     // bi_quot.print_in();
     // show("\n=============================\n");
@@ -729,26 +718,25 @@ bint bint::operator+(const bint& big_int) const {
             biggerp = const_cast<decltype(_number_)*>(&big_int._number_);
         }
         
-        
-        int overflow = 0;
+        int_least64_t overflow = 0;
         size_t i;
         for(i=0; i < equal_size; ++i) {
-            const int a = static_cast<int>(_number_.at(i));
-            const int b = static_cast<int>(big_int._number_.at(i));
-            const int res = a + b + overflow;
-            const int r1 = res & 255; // valor desta casa
-            overflow = res >> 8; // armazena o valor que será colocado na próxima casa da operação
-            result.push_back(r1);
+            const auto a = static_cast<int_least64_t>(_number_.at(i));
+            const auto b = static_cast<int_least64_t>(big_int._number_.at(i));
+            const auto res = a + b + overflow;
+            // const int r1 = res & 255; // valor desta casa
+            overflow = res >> _base_bit_size_; // armazena o valor que será colocado na próxima casa da operação
+            result.push_back(res); // == result.push_back(r1);
         }
         
         // somente quando ainda tem um overflow != 0
         const auto& bigger = *biggerp;
         for(; i < bigger_size; ++i) {
-            const int r = static_cast<int>(bigger.at(i));
-            const int res = r + overflow;
-            const int r1 = res & 255; // valor desta casa
-            overflow = res >> 8; // armazena o valor que será colocado na próxima casa da operação
-            result.push_back(r1);
+            const auto r = static_cast<int_least64_t>(bigger.at(i));
+            const auto res = r + overflow;
+            // const auto r1 = res & 255; // valor desta casa
+            overflow = res >> _base_bit_size_; // armazena o valor que será colocado na próxima casa da operação
+            result.push_back(res); // result.push_back(r1);
             if(overflow == 0) {
                 ++i;
                 break;
@@ -763,7 +751,7 @@ bint bint::operator+(const bint& big_int) const {
         // para o caso de _virtual_number_size_ == big_int._virtual_number_size_ e ter um overflow != 0
         while(overflow != 0) {
             result.push_back(overflow);
-            overflow = overflow >> 8;
+            overflow = overflow >> _base_bit_size_;
             // if(overflow >= _base_) { // não precisa pois é garantido que overflow < 256.
             //     show("ERROR - overflow in sum cannot be equal or bigger than base number. base: ",_base_,", overflow: ",overflow,"\n");
                 
@@ -815,33 +803,34 @@ bint bint::operator*(const bint& big_int) const {
         result._number_.resize(256, 0);
     }
     
-    int overflow;
+    uint_least64_t overflow;
     for(size_t i=0; i < big_int._virtual_number_size_; ++i) {
-        const int a = static_cast<int>(big_int._number_.at(i));
+        const auto a = static_cast<uint_least64_t>(big_int._number_.at(i));
         if(a == 0) continue;
         
         overflow = 0;
         size_t j=0;
         for(; j < _virtual_number_size_; ++j) {
-            const int r1 = a * static_cast<int>(_number_.at(j));
-            const int r2 = r1 + overflow;
+            const auto r1 = a * static_cast<uint_least64_t>(_number_.at(j));
+            const auto r2 = r1 + overflow;
             // if(i+j >= result._number_.size()) {
             //     result._number_.resize(i+j+1, 0);
             // }
-            const int r3 = r2 + static_cast<int>(result._number_.at(i+j));
-            const int r4 = r3 & _base_mask_;
-            overflow     = r3 >> _base_bit_size_;
-            result._number_.at(i+j) = static_cast<unsigned char>(r4);
+            const auto r3 = r2 + static_cast<uint_least64_t>(result._number_.at(i+j));
+            // const auto r4 = r3 & _base_mask_;
+            overflow = r3 >> _base_bit_size_;
+            // result._number_.at(i+j) = static_cast<unsigned char>(r4);
+            result._number_.at(i+j) = static_cast<bint_base_t>(r3); // == result._number_.at(i+j) = static_cast<bint_base_t>(r4);
         }
         
         while(overflow > 0) {
             // if(i+j >= result._number_.size()) {
             //     result._number_.resize(i+j+1, 0);
             // }
-            const int r1 = overflow + static_cast<int>(result._number_.at(i+j));
-            const int r2 = r1 & _base_mask_; // unsigned char = 255
-            overflow     = r1 >> _base_bit_size_; // unsigned char = 8
-            result._number_.at(i+j) = static_cast<unsigned char>(r2);
+            const auto r1 = overflow + static_cast<uint_least64_t>(result._number_.at(i+j));
+            // const auto r2 = r1 & _base_mask_;
+            overflow = r1 >> _base_bit_size_;
+            result._number_.at(i+j) = static_cast<bint_base_t>(r1); // == result._number_.at(i+j) = static_cast<unsigned char>(r2);
             ++j;
         }
     }
@@ -1001,12 +990,12 @@ Div<bint, bint> bint::div2(const bint& big_int) const {
     bint quotient = 0;
     bint quot = 1;
     auto divisor = big_int.abs();
-    const int divisor_most_significant_bit = big_int.get_most_significat_bit_pos();
-    const long long dividor_bits = divisor_most_significant_bit + (big_int._virtual_number_size_ -1)*_base_bit_size_;
+    const auto divisor_most_significant_bit = big_int.get_most_significat_bit_pos();
+    const int_least64_t dividor_bits = divisor_most_significant_bit + (big_int._virtual_number_size_ -1)*_base_bit_size_;
     do {
-        const int dividend_most_significant_bit = remainder.get_most_significat_bit_pos();
-        const long long dividend_bits = dividend_most_significant_bit + (remainder._virtual_number_size_ -1)*_base_bit_size_;
-        long long bit_diff = dividend_bits - dividor_bits;
+        const auto dividend_most_significant_bit = remainder.get_most_significat_bit_pos();
+        const int_least64_t dividend_bits = dividend_most_significant_bit + (remainder._virtual_number_size_ -1)*_base_bit_size_;
+        int_least64_t bit_diff = dividend_bits - dividor_bits;
         divisor.shift_left(bit_diff); // auto divisor = big_int << bit_diff;
 
         const auto diff2 = remainder.cmp_abs(divisor);
@@ -1064,7 +1053,7 @@ int bint::get_most_significat_bit_pos() const {
 
     const static std::vector<unsigned int> mask = {0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648 };
 
-    const unsigned int a = static_cast<unsigned int>(_number_.at(_virtual_number_size_-1));
+    const auto a = static_cast<uint_least32_t>(_number_.at(_virtual_number_size_-1));
     for(int i=_base_bit_size_; i > 0; --i) {
         if((a & mask.at(i)) != 0) {
             return i;
@@ -1187,7 +1176,7 @@ Div<bint, bint> bint::div3(const bint& big_int) const {
         }
 
         
-        long long num0s = 0;
+        int_least64_t num0s = 0;
         if(first_iteration == true) {} 
         else {
             num0s = (begin_old - begin)*_base_bit_size_ + bit_diff_old - bit_diff;
@@ -1282,8 +1271,8 @@ Div<bint, bint> bint::div3(const bint& big_int) const {
 
 int bint::cmp_for_div(const bint& divisor, const int bit_shift_right) const {
     for(size_t i = 0; i < divisor._virtual_number_size_-1; ++i) {
-        const auto rem_a = static_cast<int>(_number_.at(_virtual_number_size_ -1 -i));
-        const auto div_a = static_cast<int>(divisor._number_.at(divisor._virtual_number_size_ -1 -i));
+        const auto rem_a = static_cast<bint_sopr_t>(_number_.at(_virtual_number_size_ -1 -i));
+        const auto div_a = static_cast<bint_sopr_t>(divisor._number_.at(divisor._virtual_number_size_ -1 -i));
         const auto diff = rem_a - div_a;
         if(diff > 0) {
             return 1;
@@ -1293,9 +1282,9 @@ int bint::cmp_for_div(const bint& divisor, const int bit_shift_right) const {
     }
 
     // faz a primeira operação
-    auto rem_a = static_cast<int>(_number_.at(_virtual_number_size_ -divisor._virtual_number_size_));
+    auto rem_a = static_cast<bint_sopr_t>(_number_.at(_virtual_number_size_ -divisor._virtual_number_size_));
     rem_a = rem_a >> bit_shift_right;
-    auto div_a = static_cast<int>(divisor._number_.at(0));
+    auto div_a = static_cast<bint_sopr_t>(divisor._number_.at(0));
     div_a = div_a >> bit_shift_right;
     const auto diff = rem_a - div_a;
     if(diff > 0) {
@@ -1358,7 +1347,7 @@ Div<bint, bint> bint::div4(const bint& big_int) const {
     const auto divisor = big_int.abs();
     const auto divisor_size = divisor._virtual_number_size_ -1;
     const auto divisor_most_signficant_bit_pos = divisor.get_most_significat_bit_pos();
-    const auto divisor_bits_total = static_cast<long long>(divisor_size)*_base_bit_size_ +divisor_most_signficant_bit_pos; 
+    const auto divisor_bits_total = static_cast<int_least64_t>(divisor_size)*_base_bit_size_ +divisor_most_signficant_bit_pos; 
     auto dividend_size_pos = this->_virtual_number_size_ -1;
     auto dividend_bit_pos = this->get_most_significat_bit_pos();
     bint quotient = 0;
@@ -1453,7 +1442,7 @@ Div<bint, bint> bint::div5(const bint& big_int) const {
     const auto divisor = big_int.abs();
     const auto divisor_size = divisor._virtual_number_size_ -1;
     const auto divisor_most_signficant_bit_pos = divisor.get_most_significat_bit_pos();
-    const auto divisor_bits_total = static_cast<long long>(divisor_size)*_base_bit_size_ +divisor_most_signficant_bit_pos; 
+    const auto divisor_bits_total = static_cast<int_least64_t>(divisor_size)*_base_bit_size_ +divisor_most_signficant_bit_pos; 
     auto dividend_size_pos = this->_virtual_number_size_ -1;
     auto dividend_bit_pos = this->get_most_significat_bit_pos();
     bint quotient = 0;
@@ -1510,7 +1499,7 @@ size_t bint::div_fill(const bint& divisor, const size_t divisor_size,
         if(zero()) {
             bool end = false;
             for(; dividend_size_pos != -1 && end == false; ++bit0sl) {
-                unsigned int block = static_cast<unsigned int>(dividend._number_.at(dividend_size_pos));
+                auto block = static_cast<bint_base_t>(dividend._number_.at(dividend_size_pos));
                 const auto bit = get_bit(block, dividend_bit_pos);
                 if(bit == 1) {
                     add(1);
@@ -1534,7 +1523,7 @@ size_t bint::div_fill(const bint& divisor, const size_t divisor_size,
         for(;i < diff_bits && dividend_size_pos != -1; ++i) {
 
                 shift_l1();
-                unsigned int block = static_cast<unsigned int>(dividend._number_.at(dividend_size_pos));
+                auto block = static_cast<bint_base_t>(dividend._number_.at(dividend_size_pos));
                 const auto bit = get_bit(block, dividend_bit_pos);
                 if(bit == 1) {
                     add(1);
@@ -1549,7 +1538,7 @@ size_t bint::div_fill(const bint& divisor, const size_t divisor_size,
 
         if(*this < divisor && dividend_size_pos != -1) {
             shift_l1();
-            unsigned int block = static_cast<unsigned int>(dividend._number_.at(dividend_size_pos));
+            auto block = static_cast<bint_base_t>(dividend._number_.at(dividend_size_pos));
             const auto bit = get_bit(block, dividend_bit_pos);
             if(bit == 1) {
                 add(1);
@@ -1571,7 +1560,7 @@ size_t bint::div_fill(const bint& divisor, const size_t divisor_size,
         return i+bit0sl;
 }
 
-size_t bint::div_fill(const bint& divisor, const long long divisor_bits_total,
+size_t bint::div_fill(const bint& divisor, const int_least64_t divisor_bits_total,
     const bint& dividend, size_t& dividend_size_pos, int& dividend_bit_pos) {
 
         if(dividend_size_pos == 0 && dividend_bit_pos == 0) {
@@ -1582,7 +1571,7 @@ size_t bint::div_fill(const bint& divisor, const long long divisor_bits_total,
         if(zero()) {
             bool end = false;
             for(; dividend_size_pos != -1 && end == false; ++bit0sl) {
-                unsigned int block = static_cast<unsigned int>(dividend._number_.at(dividend_size_pos));
+                auto block = static_cast<bint_base_t>(dividend._number_.at(dividend_size_pos));
                 const auto bit = get_bit_int(block, dividend_bit_pos);
                 if(bit != 0) {
                     // add(1); // otimização abaixo para substituir a função add(1)
@@ -1609,7 +1598,7 @@ size_t bint::div_fill(const bint& divisor, const long long divisor_bits_total,
         for(;i < diff_bits && dividend_size_pos != -1; ++i) {
 
                 shift_l1();
-                unsigned int block = static_cast<unsigned int>(dividend._number_.at(dividend_size_pos));
+                auto block = static_cast<bint_base_t>(dividend._number_.at(dividend_size_pos));
                 const auto bit = get_bit_int(block, dividend_bit_pos);
                 if(bit != 0) {
                     _number_.at(0) |= 1; // = add(1) -> otimização, por causa do shift_l1() acima.
@@ -1624,7 +1613,7 @@ size_t bint::div_fill(const bint& divisor, const long long divisor_bits_total,
 
         if(*this < divisor && dividend_size_pos != -1) {
             shift_l1();
-            unsigned int block = static_cast<unsigned int>(dividend._number_.at(dividend_size_pos));
+            auto block = static_cast<bint_base_t>(dividend._number_.at(dividend_size_pos));
             const auto bit = get_bit_int(block, dividend_bit_pos);
             if(bit != 0) {
                 _number_.at(0) |= 1; // = add(1) -> otimização, por causa do shift_l1() acima.
@@ -1646,7 +1635,7 @@ size_t bint::div_fill(const bint& divisor, const long long divisor_bits_total,
         return i+bit0sl;
 }
 
-size_t bint::div_fill2(const bint& divisor, const long long divisor_bits_total,
+size_t bint::div_fill2(const bint& divisor, const int_least64_t divisor_bits_total,
     const bint& dividend, size_t& dividend_size_pos, int& dividend_bit_pos) {
 
         if(dividend_size_pos == 0 && dividend_bit_pos == 0) {
@@ -1657,7 +1646,7 @@ size_t bint::div_fill2(const bint& divisor, const long long divisor_bits_total,
         if(zero()) {
             bool end = false;
             for(; dividend_size_pos != -1 && end == false; ++bit0sl) {
-                unsigned int block = static_cast<unsigned int>(dividend._number_.at(dividend_size_pos));
+                auto block = static_cast<bint_base_t>(dividend._number_.at(dividend_size_pos));
                 const auto bit = get_bit_int(block, dividend_bit_pos);
                 if(bit != 0) {
                     // add(1);
@@ -1685,14 +1674,14 @@ size_t bint::div_fill2(const bint& divisor, const long long divisor_bits_total,
         auto shift_size = diff_bits < dividend_bits_total ? diff_bits : dividend_bits_total;
         shift_left(static_cast<long long>(shift_size));
 
-        const static std::vector<unsigned int> mask = {0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648 };
+        const static std::vector<uint_least32_t> mask = {0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648 };
         
         const auto x = std::lldiv(shift_size, _base_bit_size_);
         auto remainder_block_id = x.rem == 0 ? x.quot -1 : x.quot; // atualiza posição do bloco
         auto bit_pos = x.rem == 0 ? _base_bit_size_ : x.rem;
         size_t i = 0;
         for(;i < diff_bits && dividend_size_pos != -1; ++i) {
-            const auto block = static_cast<unsigned int>(dividend._number_.at(dividend_size_pos));
+            const auto block = static_cast<bint_base_t>(dividend._number_.at(dividend_size_pos));
             const auto bit = get_bit_int(block, dividend_bit_pos);
             if(bit != 0) { // insere 1 na posição
                 _number_.at(remainder_block_id) |= mask.at(bit_pos);
@@ -1713,7 +1702,7 @@ size_t bint::div_fill2(const bint& divisor, const long long divisor_bits_total,
 
         if(*this < divisor && dividend_size_pos != -1) {
             shift_l1();
-            const unsigned int block = static_cast<unsigned int>(dividend._number_.at(dividend_size_pos));
+            const auto block = static_cast<bint_base_t>(dividend._number_.at(dividend_size_pos));
             const auto bit = get_bit_int(block, dividend_bit_pos);
             if(bit != 0) {
                 _number_.at(0) |= 1; // = add(1) -> otimização, por causa do shift_l1() acima.
@@ -1735,7 +1724,7 @@ size_t bint::div_fill2(const bint& divisor, const long long divisor_bits_total,
         return i+bit0sl;
 }
 
-int bint::get_bit(const unsigned int block, const int pos) const {
+int bint::get_bit(const uint_least32_t block, const int pos) const {
     if(pos > 32) {
         throw binterror("position is greater than 32. pos: ",pos);
         // show("ERROR - position is greater than 32. pos: ",pos,", line: ",__LINE__,"\n");
@@ -1747,13 +1736,13 @@ int bint::get_bit(const unsigned int block, const int pos) const {
         // exit(EXIT_FAILURE);
     }
 
-    const static std::vector<unsigned int> mask = {0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648 };
+    const static std::vector<uint_least32_t> mask = {0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648 };
 
     const int bit = (block & mask.at(pos)) == 0 ? 0 : 1;
     return bit;
 }
 
-unsigned int bint::get_bit_int(const unsigned int block, const int pos) const {
+unsigned int bint::get_bit_int(const uint_least32_t block, const int pos) const {
     if(pos > 32) {
         throw binterror("position is greater than 32. pos: ",pos);
         // show("ERROR - position is greater than 32. pos: ",pos,", line: ",__LINE__,"\n");
@@ -1765,13 +1754,13 @@ unsigned int bint::get_bit_int(const unsigned int block, const int pos) const {
         // exit(EXIT_FAILURE);
     }
 
-    const static std::vector<unsigned int> mask = {0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648 };
+    const static std::vector<uint_least32_t> mask = {0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824, 2147483648 };
 
     const auto bit = block & mask.at(pos);
     return bit;
 }
 
-bint bint::pow1(const long long power) const {
+bint bint::pow1(const int_least64_t power) const {
     if(zero()) {
         return {0};
     }
@@ -1787,14 +1776,14 @@ bint bint::pow1(const long long power) const {
         return *this;
     }
     
-    std::map<long long, bint> history;
+    std::map<int_least64_t, bint> history;
     history.emplace(1, *this);
     
     ////////////////////////////////////////////////////////////////
     // cria um histórico de potências do número
     ////////////////////////////////////////////////////////////////
     bint& num = *const_cast<bint*>(this);
-    long long i = 1;
+    int_least64_t i = 1;
     do {
         // show("<<::i: ",i,", power: ",power,"\n");
         const auto ni = i << 1; // multiplica por dois a pontência
@@ -1970,11 +1959,11 @@ bint bint::operator|(const bint& big_int) const {
     if(_virtual_number_size_ > big_int._virtual_number_size_) {
         common_size = big_int._virtual_number_size_;
         bigger_size = _virtual_number_size_;
-        biggerp = const_cast<std::vector<unsigned char>*>(&_number_);
+        biggerp = const_cast<std::vector<bint_base_t>*>(&_number_);
     } else {
         common_size = _virtual_number_size_;
         bigger_size = big_int._virtual_number_size_;
-        biggerp = const_cast<std::vector<unsigned char>*>(&big_int._number_);
+        biggerp = const_cast<std::vector<bint_base_t>*>(&big_int._number_);
     }
     
     for(size_t i=0; i < common_size; ++i) {
@@ -1994,7 +1983,7 @@ bint bint::operator|(const bint& big_int) const {
         result._is_zero_ = false;
         result._is_negative_ = _is_negative_ or big_int._is_negative_;
     } else {
-        result.update_virtual_number_size();
+        result.update_virtual_number_size(bigger_size);
         if(result.zero() == false) {
             result._is_negative_ = _is_negative_ or big_int._is_negative_;
         }
@@ -2021,11 +2010,11 @@ bint bint::operator^(const bint& big_int) const {
     if(_virtual_number_size_ > big_int._virtual_number_size_) {
         common_size = big_int._virtual_number_size_;
         bigger_size = _virtual_number_size_;
-        biggerp = const_cast<std::vector<unsigned char>*>(&_number_);
+        biggerp = const_cast<std::vector<bint_base_t>*>(&_number_);
     } else {
         common_size = _virtual_number_size_;
         bigger_size = big_int._virtual_number_size_;
-        biggerp = const_cast<std::vector<unsigned char>*>(&big_int._number_);
+        biggerp = const_cast<std::vector<bint_base_t>*>(&big_int._number_);
     }
     
     for(size_t i=0; i < common_size; ++i) {
@@ -2066,7 +2055,7 @@ bint bint::operator~() const {
         result.push_back(r);
     }
     
-    result.update_virtual_number_size();
+    result.update_virtual_number_size(_virtual_number_size_);
     if(result.zero() == false) {
         result._is_negative_ = !_is_negative_;
     }
@@ -2074,7 +2063,7 @@ bint bint::operator~() const {
     return result;
 }
 
-bint bint::operator<<(const long long n) const {
+bint bint::operator<<(const int_least64_t n) const {
     if(n < 0) {
         throw binterror("the number of 'shifting' must be a integer positive number. n: ",n);
         // show("ERROR - the number of 'shifting' must be a integer positive number. n: ",n,", line: ",__LINE__,"\n");
@@ -2102,19 +2091,18 @@ bint bint::operator<<(const long long n) const {
     
     if(shift.rem == 0) { // o shift é perfeito e não precisa de correção
         for(size_t i=0; i < _virtual_number_size_; ++i) {
-            const int a = static_cast<int>(_number_.at(i));
-            result.push_back(a);
+            result.push_back(_number_.at(i));
         }
         
     } else {
         const int overflow_shift = _base_bit_size_ - shift.rem;
-        unsigned char overflow = 0;
-        unsigned char new_overflow = 0;
+        uint_least64_t overflow = 0;
+        uint_least64_t new_overflow = 0;
         for(size_t i=0; i < _virtual_number_size_; ) {
-            unsigned long long word = 0;
+            uint_least64_t word = 0;
         
             int end = -1;
-            for(int j=7; j > -1; --j) {
+            for(int j=1; j > -1; --j) {
                 if(i+j < _virtual_number_size_) {
                     if(end == -1) {
                         end = j;
@@ -2132,8 +2120,9 @@ bint bint::operator<<(const long long n) const {
             overflow = new_overflow;
         
             for(int j=0; j <= end; ++j) {
-                const int r = word & _base_mask_;
-                result.push_back(r);
+                // const int r = word & _base_mask_;
+                // result.push_back(r);
+                result.push_back(word);
                 word = word >> _base_bit_size_;
             }
         
@@ -2153,7 +2142,7 @@ bint bint::operator<<(const long long n) const {
     return result;
 }
 
-bint bint::operator>>(const long long n) const {
+bint bint::operator>>(const int_least64_t n) const {
     if(n < 0) {
         throw binterror("the number of 'shifting' must be a integer positive number. n: ",n);
         // show("ERROR - the number of 'shifting' must be a integer positive number. n: ",n,", line: ",__LINE__,"\n");
@@ -2176,8 +2165,9 @@ bint bint::operator>>(const long long n) const {
     
     if(shift.rem == 0) { // shift perfeito, somente inseri os bits restantes no resultado
         for(size_t i=shift.quot; i < _virtual_number_size_; ++i) {
-            const int a = static_cast<int>(_number_.at(i));
-            result.push_back(a);
+            // const int a = static_cast<int>(_number_.at(i));
+            // result.push_back(a);
+            result.push_back(_number_.at(i));
         }
         
     } else {
@@ -2185,15 +2175,15 @@ bint bint::operator>>(const long long n) const {
         const int overflow_mask = (1 << shift.rem) -1;
         
         for(size_t i = shift.quot; i < _virtual_number_size_-1; ++i) {
-            const int a = _number_.at(i+1) & overflow_mask;
-            const int b = a << overflow_shift;
-            const int c = _number_.at(i) >> shift.rem;
-            const int r = b | c;
+            const uint_least64_t a = _number_.at(i+1) & overflow_mask;
+            const uint_least64_t b = a << overflow_shift;
+            const uint_least64_t c = _number_.at(i) >> shift.rem;
+            const uint_least64_t r = b | c;
             
             result.push_back(r);
         }
     
-        const int f = _number_.at(_virtual_number_size_-1) >> shift.rem;
+        const auto f = _number_.at(_virtual_number_size_-1) >> shift.rem;
         result.push_back(f); // insere o último elemento
     }
     
@@ -2208,7 +2198,7 @@ bint bint::operator>>(const long long n) const {
 ///////////////////////////////////////////////////////////////////////////////////////
 // implementation in .cpp file - self operations
 ///////////////////////////////////////////////////////////////////////////////////////
-bint& bint::mul(const int number) {
+bint& bint::mul(const int_least32_t number) {
     if(zero()) {
         return *this;
     }
@@ -2226,15 +2216,15 @@ bint& bint::mul(const int number) {
         _is_negative_ = !_is_negative_;
     }
     
-    const unsigned long long num = number < 0 ? -1*number : number;
-    unsigned long long overflow = 0;
+    const int_least64_t num = number < 0 ? -1*number : number;
+    uint_least64_t overflow = 0;
     size_t i = 0;
     for(; i < _virtual_number_size_; ++i) {
-        const auto a = static_cast<unsigned long long>(_number_.at(i));
+        const auto a = static_cast<uint_least64_t>(_number_.at(i));
         const auto r1 = a*num + overflow;
-        const auto r2 = r1 & _base_mask_;
+        // const auto r2 = r1 & _base_mask_;
         overflow = r1 >> _base_bit_size_;
-        _number_.at(i) = static_cast<unsigned char>(r2);
+        _number_.at(i) = static_cast<bint_base_t>(r1); // _number_.at(i) = static_cast<unsigned char>(r2);
     }
     
     while(overflow > 0) {
@@ -2307,11 +2297,12 @@ bint& bint::shift_l1() {
         return *this;
     }
     
-    constexpr const char last_bit_mask = 128; // para base 256 - unsigned char -> 8 bits
-    unsigned char bit = (_number_.at(0) & last_bit_mask) == 0 ? 0 : 1;
+    // constexpr const char last_bit_mask = 128; // para base 256 - unsigned char -> 8 bits
+    constexpr const uint_least32_t last_bit_mask = 2147483648; // para base unsigned int -> 32 bits
+    bint_base_t bit = (_number_.at(0) & last_bit_mask) == 0 ? 0 : 1;
     _number_.at(0) = _number_.at(0) << 1;
     for(size_t i=1; i < _virtual_number_size_; ++i) {
-        const unsigned char last_bit = (_number_.at(i) & last_bit_mask) == 0 ? 0 : 1;
+        const auto last_bit = (_number_.at(i) & last_bit_mask) == 0 ? 0 : 1;
         _number_.at(i) = _number_.at(i) << 1;
         _number_.at(i) = _number_.at(i) | bit;
         bit = last_bit;
@@ -2324,7 +2315,7 @@ bint& bint::shift_l1() {
     return *this;
 }
 
-bint& bint::shift_left(const long long n) {
+bint& bint::shift_left(const int_least64_t n) {
     if(n < 0) {
         throw binterror("the number of 'shifting' must be a integer positive number. n: ",n);
         // show("ERROR - the number of 'shifting' must be a integer positive number. n: ",n,", line: ",__LINE__,"\n");
@@ -2357,15 +2348,15 @@ bint& bint::shift_left(const long long n) {
         }
         
     } else {
-        const unsigned char num_bit_shiftl = _base_bit_size_ - shift.rem; // for _base_ = 256 -> 8 bits.
+        const int_least32_t num_bit_shiftl = _base_bit_size_ - shift.rem;
         // realiza a última posição
         // const decltype(typename std::decay<decltype(_number_.at(0))>::type) lbit = _number_.at(_virtual_number_size_-1) >> num_bit_shiftl;
-        const unsigned char lbit = _number_.at(_virtual_number_size_-1) >> num_bit_shiftl;
+        const bint_base_t lbit = _number_.at(_virtual_number_size_-1) >> num_bit_shiftl;
         _number_.at(_virtual_number_size_+shift.quot) = lbit;
 
         for(size_t i=_virtual_number_size_-1; i > 0; --i) {
             // const decltype(typename std::decay<decltype(_number_.at(0))>::type) bit = _number_.at(i-1) >> num_bit_shiftl;
-            const unsigned char bit = _number_.at(i-1) >> num_bit_shiftl;
+            const bint_base_t bit = _number_.at(i-1) >> num_bit_shiftl;
             const auto a = _number_.at(i) << shift.rem;
             const auto b = a | bit;
             _number_.at(i+shift.quot) = b;
@@ -2375,7 +2366,7 @@ bint& bint::shift_left(const long long n) {
         _number_.at(shift.quot) = _number_.at(0) << shift.rem;
     }
 
-    for(long long i=0; i < shift.quot; ++i) {
+    for(int_least64_t i=0; i < shift.quot; ++i) {
         _number_.at(i) = 0;
     }
 
@@ -2393,7 +2384,8 @@ bint& bint::shift_r1() {
         return *this;
     }
 
-    constexpr const unsigned char last_bit_mask = 128;
+    // constexpr const unsigned char last_bit_mask = 128; // para base 256
+    constexpr const uint_least32_t last_bit_mask = 2147483648; // para base unsigned int -> 32 bits
 
     for(size_t i=0; i < _virtual_number_size_-1; ++i) {
         const auto last_bit = (_number_.at(i+1) & 1) == 0 ? 0 : 1;
@@ -2414,7 +2406,7 @@ bint& bint::shift_r1() {
     return *this;
 }
 
-bint& bint::shift_right(const long long n) {
+bint& bint::shift_right(const int_least64_t n) {
     if(n < 0) {
         throw binterror("the number of 'shifting' must be a integer positive number. n: ",n);
         // show("ERROR - the number of 'shifting' must be a integer positive number. n: ",n,", line: ",__LINE__,"\n");
@@ -2449,22 +2441,22 @@ bint& bint::shift_right(const long long n) {
         
     } else {
         const int overflow_shift = _base_bit_size_ - shift.rem;
-        const int overflow_mask = (1 << shift.rem) -1;
+        const uint_least64_t overflow_mask = (1 << shift.rem) -1;
         
         for(size_t i = shift.quot; i < _virtual_number_size_-1; ++i) {
-            const int a = _number_.at(i+1) & overflow_mask;
-            const int b = a << overflow_shift;
-            const int c = _number_.at(i) >> shift.rem;
-            const int r = b | c;
+            const uint_least64_t a = _number_.at(i+1) & overflow_mask;
+            const uint_least64_t b = a << overflow_shift;
+            const uint_least64_t c = _number_.at(i) >> shift.rem;
+            const uint_least64_t r = b | c;
             const size_t new_id = i - shift.quot;
             // _number_.at(i) = 0; // deve ser antes para o caso de i == new_id -> shift.quot = 0
-            _number_.at(new_id) = static_cast<unsigned char>(r);
+            _number_.at(new_id) = static_cast<bint_base_t>(r);
         }
     
         const auto f = _number_.at(_virtual_number_size_-1) >> shift.rem;
         const size_t new_lid = _virtual_number_size_ -1 - shift.quot;
         // _number_.at(_virtual_number_size_-1) = 0; // deve ser antes para o caso de i == new_id -> shift.quot = 0
-        _number_.at(new_lid) = static_cast<unsigned char>(f); // insere o último elemento
+        _number_.at(new_lid) = static_cast<bint_base_t>(f); // insere o último elemento
     }
 
     // reseta todos as casas do número que agora são 0
@@ -2585,12 +2577,12 @@ bint bint::private_subtration(const bint& minuend, const bint& subtrahend) const
     const auto equal_size = subtrahend._virtual_number_size_;
     bool has_overflow = false;
     for(size_t i=0; i < equal_size; ++i) {
-        const int m1 = static_cast<int>(minuend._number_.at(i));
-        const int m2 = has_overflow == true ? m1-1 : m1;
-        const int s = static_cast<int>(subtrahend._number_.at(i));
-        int r = 0;
+        const auto m1 = static_cast<int_least64_t>(minuend._number_.at(i));
+        const auto m2 = has_overflow == true ? m1-1 : m1;
+        const auto s = static_cast<int_least64_t>(subtrahend._number_.at(i));
+        int_least64_t r = 0;
         if(m2 < s) {
-            r = m2+256-s;
+            r = m2+_base_-s;
             has_overflow = true;
         } else {
             r = m2-s;
@@ -2601,11 +2593,11 @@ bint bint::private_subtration(const bint& minuend, const bint& subtrahend) const
     }
     
     for(size_t i=equal_size; i < minuend._virtual_number_size_; ++i) {
-        const int m1 = static_cast<int>(minuend._number_.at(i));
-        const int m2 = has_overflow == true ? m1-1 : m1;
-        int r = 0;
+        const auto m1 = static_cast<int_least64_t>(minuend._number_.at(i));
+        const auto m2 = has_overflow == true ? m1-1 : m1;
+        int_least64_t r = 0;
         if(m2 < 0) {
-            r = 255;
+            r = _base_mask_;
             has_overflow = true;
         } else {
             r = m2;
@@ -2615,7 +2607,7 @@ bint bint::private_subtration(const bint& minuend, const bint& subtrahend) const
         result.push_back(r);
     }
     
-    result.update_virtual_number_size();
+    result.update_virtual_number_size(minuend._virtual_number_size_);
     if(result.zero() == false) {
         result._is_negative_ = minuend._is_negative_;
     }
@@ -2627,34 +2619,34 @@ bint bint::private_subtration(const bint& minuend, const bint& subtrahend) const
 // implementation in .cpp file - auxiliar functions - self operations
 ///////////////////////////////////////////////////////////////////////////////////////
 void bint::private_add(const bint& number) {
-    int overflow = 0;
+    int_least64_t overflow = 0;
     const size_t size = _virtual_number_size_ > number._virtual_number_size_ ? number._virtual_number_size_ : _virtual_number_size_;
     for(size_t i=0; i < size; ++i) {
-        const auto a = static_cast<int>(_number_.at(i));
-        const auto b = static_cast<int>(number._number_.at(i));
+        const auto a = static_cast<int_least64_t>(_number_.at(i));
+        const auto b = static_cast<int_least64_t>(number._number_.at(i));
         const auto r1 = a + b + overflow;
-        const auto r2 = r1 & _base_mask_;
-        _number_.at(i) = static_cast<unsigned char>(r2); // update the result
+        // const auto r2 = r1 & _base_mask_;
+        _number_.at(i) = static_cast<bint_base_t>(r1); // == _number_.at(i) = static_cast<unsigned char>(r2); // update the result
         
         overflow = r1 >> _base_bit_size_;
     }
     
     if(_virtual_number_size_ > number._virtual_number_size_) {
         for(size_t i = number._virtual_number_size_; i < _virtual_number_size_; ++i) {
-            const auto a = static_cast<int>(_number_.at(i));
+            const auto a = static_cast<int_least64_t>(_number_.at(i));
             const auto r1 = a + overflow;
-            const auto r2 = r1 & _base_mask_;
-            _number_.at(i) = static_cast<unsigned char>(r2); // update the result
+            // const auto r2 = r1 & _base_mask_;
+            _number_.at(i) = static_cast<bint_base_t>(r1); // == _number_.at(i) = static_cast<unsigned char>(r2); // update the result
         
             overflow = r1 >> _base_bit_size_;
         }
         
     } else if(_virtual_number_size_ < number._virtual_number_size_) {
         for(size_t i = _virtual_number_size_; i < number._virtual_number_size_; ++i) {
-            const auto a = static_cast<int>(number._number_.at(i));
+            const auto a = static_cast<int_least64_t>(number._number_.at(i));
             const auto r1 = a + overflow;
-            const auto r2 = r1 & _base_mask_;
-            push_back(r2); // update the result
+            // const auto r2 = r1 & _base_mask_;
+            push_back(r1); // == push_back(r2); // update the result
         
             overflow = r1 >> _base_bit_size_;
         }
@@ -2662,8 +2654,8 @@ void bint::private_add(const bint& number) {
     
     // only left overflow to count
     while(overflow > 0) {
-        const auto r = overflow & _base_mask_;
-        push_back(r);
+        // const auto r = overflow & _base_mask_;
+        push_back(overflow); // == push_back(r);
         overflow = overflow >> _base_bit_size_;
     }
 }
@@ -2671,29 +2663,29 @@ void bint::private_add(const bint& number) {
 void bint::private_sub_self_minuend(const bint& subtrahend) {
     bool overflow = false;
     for(size_t i=0; i < subtrahend._virtual_number_size_; ++i) {
-        int m = static_cast<int>(_number_.at(i));
+        auto m = static_cast<int_least64_t>(_number_.at(i));
         m = overflow == true ? m-1 : m;
         
-        const int s = static_cast<int>(subtrahend._number_.at(i));
+        const auto s = static_cast<int_least64_t>(subtrahend._number_.at(i));
         if(m < s) {
             m = m + _base_;
             overflow = true;
         } else {
             overflow = false;
         }
-        
-        const int r = m - s;
-        _number_.at(i) = static_cast<unsigned char>(r);
+
+        const auto r = m - s;
+        _number_.at(i) = static_cast<bint_base_t>(r);
     }
     
     for(size_t i=subtrahend._virtual_number_size_; i < _virtual_number_size_; ++i) {
         if(overflow == true) {
-            const int m = static_cast<int>(_number_.at(i)) -1;
+            const auto m = static_cast<int_least64_t>(_number_.at(i)) -1;
             if(m < 0) {
-                _number_.at(i) = static_cast<unsigned char>(_base_mask_);
+                _number_.at(i) = static_cast<bint_base_t>(_base_mask_);
                 overflow = true;
             } else {
-                _number_.at(i) = static_cast<unsigned char>(m);
+                _number_.at(i) = static_cast<bint_base_t>(m);
                 overflow = false;
             }
         } else {
@@ -2707,10 +2699,10 @@ void bint::private_sub_self_minuend(const bint& subtrahend) {
 void bint::private_sub_self_subtrahend(const bint& minuend) {
     bool overflow = false;
     for(size_t i=0; i < _virtual_number_size_; ++i) {
-        int m = static_cast<int>(minuend._number_.at(i));
+        auto m = static_cast<int_least64_t>(minuend._number_.at(i));
         m = overflow == true ? m-1 : m;
         
-        const int s = static_cast<int>(_number_.at(i));
+        const auto s = static_cast<int_least64_t>(_number_.at(i));
         if(m < s) {
             m = m + _base_;
             overflow = true;
@@ -2718,13 +2710,13 @@ void bint::private_sub_self_subtrahend(const bint& minuend) {
             overflow = false;
         }
         
-        const int r = m - s;
-        _number_.at(i) = static_cast<unsigned char>(r);
+        const auto r = m - s;
+        _number_.at(i) = static_cast<bint_base_t>(r);
     }
     
     for(size_t i=_virtual_number_size_; i < minuend._virtual_number_size_; ++i) {
         if(overflow == true) {
-            const int m = static_cast<int>(minuend._number_.at(i)) -1;
+            const auto m = static_cast<int_least64_t>(minuend._number_.at(i)) -1;
             if(m < 0) {
                 push_back(_base_mask_);
                 overflow = true;
@@ -2733,13 +2725,13 @@ void bint::private_sub_self_subtrahend(const bint& minuend) {
                 overflow = false;
             }
         } else {
-            const int m = static_cast<int>(minuend._number_.at(i));
+            const auto m = static_cast<int_least64_t>(minuend._number_.at(i));
             push_back(m);
             overflow = false;
         }
     }
     
-    update_virtual_number_size();
+    update_virtual_number_size(minuend._virtual_number_size_);
     if(zero() == false) {
         _is_negative_ = minuend._is_negative_;
     }
@@ -2748,10 +2740,10 @@ void bint::private_sub_self_subtrahend(const bint& minuend) {
 void bint::private_sub_self_minuend_for_div(const bint& subtrahend, const size_t begin) {
     bool overflow = false;
     for(size_t i=0; i < subtrahend._virtual_number_size_; ++i) {
-        int m = static_cast<int>(_number_.at(i+begin));
+        auto m = static_cast<int_least64_t>(_number_.at(i+begin));
         m = overflow == true ? m-1 : m;
         
-        const int s = static_cast<int>(subtrahend._number_.at(i));
+        const auto s = static_cast<int_least64_t>(subtrahend._number_.at(i));
         if(m < s) {
             m = m + _base_;
             overflow = true;
@@ -2759,18 +2751,18 @@ void bint::private_sub_self_minuend_for_div(const bint& subtrahend, const size_t
             overflow = false;
         }
         
-        const int r = m - s;
-        _number_.at(i+begin) = static_cast<unsigned char>(r);
+        const auto r = m - s;
+        _number_.at(i+begin) = static_cast<bint_base_t>(r);
     }
     
     for(size_t i=subtrahend._virtual_number_size_+begin; i < _virtual_number_size_; ++i) {
         if(overflow == true) {
-            const int m = static_cast<int>(_number_.at(i)) -1;
+            const auto m = static_cast<int_least64_t>(_number_.at(i)) -1;
             if(m < 0) {
-                _number_.at(i) = static_cast<unsigned char>(_base_mask_);
+                _number_.at(i) = static_cast<bint_base_t>(_base_mask_);
                 overflow = true;
             } else {
-                _number_.at(i) = static_cast<unsigned char>(m);
+                _number_.at(i) = static_cast<bint_base_t>(m);
                 overflow = false;
             }
         } else {
