@@ -94,71 +94,71 @@ int main()
     // b.print_in();
     // show("\n");
     
-    // test001();
-    // test002();
-    // test003();
-    // test004();
-    // test005();
-    // test006();
-    // test007();
-    // test008();
-    // test009();
-    // test010();
-    // test011();
-    // test012();
-    // test013();
-    // test014();
-    // test015();
-    // test016();
-    // test017();
-    // test018();
-    // test019();
-    // test020();
-    // test021();
-    // test022();
-    // test023();
-    // test024();
-    // test025();
-    // test026();
-    // test027();
-    // test028();
-    // test029();
-    // test030();
-    // start = std::chrono::high_resolution_clock::now();
-    // test031();
-    // stop = std::chrono::high_resolution_clock::now();
-    // duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    // show("execution time (microseconds): ",duration.count(),"\n");
+    test001();
+    test002();
+    test003();
+    test004();
+    test005();
+    test006();
+    test007();
+    test008();
+    test009();
+    test010();
+    test011();
+    test012();
+    test013();
+    test014();
+    test015();
+    test016();
+    test017();
+    test018();
+    test019();
+    test020();
+    test021();
+    test022();
+    test023();
+    test024();
+    test025();
+    test026();
+    test027();
+    test028();
+    test029();
+    test030();
+    start = std::chrono::high_resolution_clock::now();
+    test031();
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    show("execution time (microseconds): ",duration.count(),"\n");
 
-    // start = std::chrono::high_resolution_clock::now();
-    // test032();
-    // stop = std::chrono::high_resolution_clock::now();
-    // duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    // show("execution time (microseconds): ",duration.count(),"\n");
+    start = std::chrono::high_resolution_clock::now();
+    test032();
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    show("execution time (microseconds): ",duration.count(),"\n");
 
-    // start = std::chrono::high_resolution_clock::now();
-    // test033();
-    // stop = std::chrono::high_resolution_clock::now();
-    // duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    // show("execution time (microseconds): ",duration.count(),"\n");
+    start = std::chrono::high_resolution_clock::now();
+    test033();
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    show("execution time (microseconds): ",duration.count(),"\n");
 
-    // start = std::chrono::high_resolution_clock::now();
-    // test034();
-    // stop = std::chrono::high_resolution_clock::now();
-    // duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    // show("execution time (microseconds): ",duration.count(),"\n");
+    start = std::chrono::high_resolution_clock::now();
+    test034();
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    show("execution time (microseconds): ",duration.count(),"\n");
 
-    // start = std::chrono::high_resolution_clock::now();
-    // test035();
-    // stop = std::chrono::high_resolution_clock::now();
-    // duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    // show("execution time (microseconds): ",duration.count(),"\n");
+    start = std::chrono::high_resolution_clock::now();
+    test035();
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    show("execution time (microseconds): ",duration.count(),"\n");
 
-    // start = std::chrono::high_resolution_clock::now();
-    // test036();
-    // stop = std::chrono::high_resolution_clock::now();
-    // duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    // show("execution time (microseconds): ",duration.count(),"\n");
+    start = std::chrono::high_resolution_clock::now();
+    test036();
+    stop = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    show("execution time (microseconds): ",duration.count(),"\n");
 
     test037();
     return 0;
@@ -343,11 +343,19 @@ void test005() {
 void test006() {
     HEADER_TEST
     
-    bint b1 ("255");
-    bint b2 ("1");
-    
+    bint b1 = 4294967296;
+    bint b2 = 1;
+    // b1.print_in();
+
+    b1 = 4294967295;
     auto b3 = b1 + b2;
-    b3.print_in();
+
+    b1 = 4294967297;
+    // b1.print_in();
+
+    b2 = "1";
+    b3 = b1 + b2;
+    // b3.print_in();
     
     b1.set("10");
     b2.set("1");
@@ -358,18 +366,46 @@ void test006() {
     b1.set("256");
     b2.set("25");
     auto r2 = b1.div_by_10();
-    show("\n");
-    r2.quot.print_in();
-    show("\n");
+    // show("\n");
+    // r2.quot.print_in();
+    // show("\n");
     check(r2.quot == b2);
     check(r2.rem == 6);
+
+    // b1 = "11111111111111";
+    // b1 = "4294967296000";
+        //   10000000000
+    // b1 = "94967296000";
+    // b2 = 4294967295;
+    // show("b2: ",b2.bstr(),"\n");
+    // b2.print_in();
+    // b2.print_in_binary();
+    // exit(1);
+    // show("maxu32b: ",std::numeric_limits<uint_least32_t>::max(),"\n");
+    // b1 = 12690588672;
+    // b1.shift_right(32);
+    // show("bx1: ",b1,"\n");
+    // exit(1);
+
+    b1 = "90000000000";
+    // b1.print_in();
+    r2 = b1.div_by_10();
+    check(r2.quot == 9000000000);
+    check(r2.rem == 0);
+    // show("  b1: ",b1,"\n");
+    // show("quot: ",r2.quot,"\n");
+    // show(" rem: ",r2.rem,"\n");
+
     
     b1.set("657984132165479879843165479876546465498732157987651321000000001126498794");
     b2.set("65798413216547987984316547987654646549873215798765132100000000112649879");
     auto r3 = b1.div_by_10();
-    show("\n");
-    r3.quot.print_in();
-    show("\n");
+    // show("\n");
+    // r3.quot.print_in();
+    // show("\n");
+    // show("-------------\n");
+    // show("b2: ",b2.str(),"\n");
+    // show("q3: ",r3.quot,"\n");
     check(r3.quot == b2);
     check(r3.rem == 4);
     
@@ -849,7 +885,11 @@ void test014() {
     check(b1 == "-1");
     
     b1 = -255;
+    // show("b1: ",b1,"\n");
+    // b1.print_in();
     --b1;
+    // show("b1: ",b1,"\n");
+    // b1.print_in();
     check(b1 == "-256");
     
     b1 = -256;
@@ -877,7 +917,7 @@ void test015() {
     
     
     srand(static_cast<unsigned>(time(0))); 
-    long long l1 = rand();
+    long l1 = rand();
     bint b1 = l1;
     
     for(int i=0; i < 1000001; ++i) {
@@ -896,7 +936,7 @@ void test016() {
     
     
     srand(static_cast<unsigned>(time(0))); 
-    long long l1 = rand();
+    long l1 = rand();
     bint b1 = l1;
     
     for(int i=0; i < 1000001; ++i) {
@@ -914,7 +954,7 @@ void test017() {
     HEADER_TEST
     
     srand(static_cast<unsigned>(time(0))); 
-    long long l1 = rand();
+    long l1 = rand();
     bint b1 = l1;
     
     for(int i=0; i < 1000001; ++i) {
@@ -932,7 +972,7 @@ void test018() {
     HEADER_TEST
     
     // b1: 1907286735, l1: 1907286735, i: 0, s: 15, l2: 62497971732480, b2: 551911718912
-    long long l1 = 1907286735;
+    long l1 = 1907286735;
     bint b1 = l1;
     
     b1 = 1;
@@ -1002,7 +1042,7 @@ void test018() {
     check(b1 == "1222931185108601318358823945006368045641735390098317463408126790726708101255292425196448740010419250630255146935548462613241490181501597937145788741372068470351485750267755798511868727554309354942078485135515648763983220604575595166299719158144814546200431542921803651745851121606156394089910900799074464756391385512434074968120989821436105229269573890294992848551936");
     
 
-    show("max long long: ",std::numeric_limits<long long>::max(),"\n");
+    show("max long: ",std::numeric_limits<long>::max(),"\n");
     
     l1 = 9223372036854775807;
     b1 = l1;
@@ -1158,18 +1198,18 @@ void test018() {
 void test019() {
     HEADER_TEST
     
-    show("max unsigned long long: ",std::numeric_limits<unsigned long long>::max(),"\n");
-    show("max long long: ",std::numeric_limits<long long>::max(),"\n");
+    show("max unsigned long: ",std::numeric_limits<unsigned long>::max(),"\n");
+    show("max long: ",std::numeric_limits<long>::max(),"\n");
     show("max uint: ",std::numeric_limits<unsigned int>::max(),"\n");
     
     srand(static_cast<unsigned>(time(0))); 
-    unsigned long long l1 = rand();
+    unsigned long l1 = rand();
     bint b1 = l1;
     
     // b1: 607616989, l1: 607616989, i: 0, l2: 18446744073101934626, b2: -3687350306, s2: -18446744073101934626
     
     
-    show("not(607616989): ",(~static_cast<unsigned long long>(607616989)),"\n");
+    show("not(607616989): ",(~static_cast<unsigned long>(607616989)),"\n");
     show("not(607616989): ",(~static_cast<unsigned long>(607616989)),"\n");
     show("not(607616989): ",(~static_cast<unsigned int>(607616989)),"\n");
     
@@ -1190,9 +1230,10 @@ void test019() {
     
     // deve se testar assim, pois no bint o o pad mínimo é um char de 8 bits.
     for(int i=1; i < 256; ++i) {
-        auto c = static_cast<unsigned char>(i);
+        auto c = static_cast<uint_least32_t>(i);
         b1 = c;
-        auto c2 = (~c) & 255;
+        // auto c2 = (~c) & 255; // para base 256
+        auto c2 = (~c) & 4294967295; // para base 32bits
         auto b2 = ~b1;
         auto s2 = "-" + std::to_string(c2);
         if(s2 == "-0") {
@@ -1375,8 +1416,8 @@ void test024() {
     
     srand(time(NULL));
     for(int i=0; i < 1000; ++i) {
-        long long a = rand() % 897465132165;
-        long long b = rand() % 897465132165;
+        long a = rand() % 897465132165;
+        long b = rand() % 897465132165;
         a = rand()%2 == 0 ? -1*a : a;
         b = rand()%2 == 0 ? -1*b : b;
         b1 = a;
@@ -1477,8 +1518,8 @@ void test025() {
     
     srand(time(NULL));
     for(int i=0; i < 1000; ++i) {
-        long long a = rand() % 897465132165;
-        long long b = rand() % 897465132165;
+        long a = rand() % 897465132165;
+        long b = rand() % 897465132165;
         a = rand()%2 == 0 ? -1*a : a;
         b = rand()%2 == 0 ? -1*b : b;
         b1 = a;
@@ -1566,7 +1607,7 @@ void test026() {
     
     bint b1 = 1;
 
-    unsigned long long u = 1;
+    unsigned long u = 1;
 
     for(int i=0; i < 63; ++i) {
         b1.shift_l1();
@@ -1649,7 +1690,7 @@ void test027() {
     HEADER_TEST
 
     // b1: 1907286735, l1: 1907286735, i: 0, s: 15, l2: 62497971732480, b2: 551911718912
-    long long l1 = 1907286735;
+    long l1 = 1907286735;
     bint b1 = l1;
     
     b1 = 1;
@@ -1669,7 +1710,7 @@ void test027() {
         check(b3 == l3);
     }
 
-    unsigned long long u = 1;
+    unsigned long u = 1;
     b1 = 1;
     for(int i=0; i < 63; ++i) {
         b1.shift_left(1);
@@ -1782,115 +1823,115 @@ void test028() {
     // check(b1 == "0");
     
     b1 = "635906649375399794125767596607340466091656";
-    for(long long i = 0; i < 25407; ++i) {
+    for(long i = 0; i < 25407; ++i) {
         b1.shift_r1();
     }
     check(b1 == "0");
     
     b1 = "279435171977218755026587939688869193238267";
-    for(long long i = 0; i < 70; ++i) {
+    for(long i = 0; i < 70; ++i) {
         b1.shift_r1();
     }
     check(b1 == "236690797286375877915");
     
     b1 = "35390512574216224080788894885646425704606";
-    for(long long i = 0; i < 58; ++i) {
+    for(long i = 0; i < 58; ++i) {
         b1.shift_r1();
     }
     check(b1 == "122785505978690534792347");
     
     b1 = "148475671847375854889729242734916377576348";
-    for(long long i = 0; i < 74; ++i) {
+    for(long i = 0; i < 74; ++i) {
         b1.shift_r1();
     }
     check(b1 == "7860236620027819892");
     
     b1 = "420704212567635689708070779383701803286318";
-    for(long long i = 0; i < 10; ++i) {
+    for(long i = 0; i < 10; ++i) {
         b1.shift_r1();
     }
     check(b1 == "410843957585581728230537870491896292271");
     
     b1 = "259086725384037953052822743703693867135140";
-    for(long long i = 0; i < 3; ++i) {
+    for(long i = 0; i < 3; ++i) {
         b1.shift_r1();
     }
     check(b1 == "32385840673004744131602842962961733391892");
     
     b1 = "342073941398233852622572358883495173865592";
-    for(long long i = 0; i < 51; ++i) {
+    for(long i = 0; i < 51; ++i) {
         b1.shift_r1();
     }
     check(b1 == "151911346345838295156559442");
     
     b1 = "433662342307604451075104245235193107169393";
-    for(long long i = 0; i < 22; ++i) {
+    for(long i = 0; i < 22; ++i) {
         b1.shift_r1();
     }
     check(b1 == "103393159462834465760017453488157536");
     
     b1 = "636147155947843666547615873446699673451680";
-    for(long long i = 0; i < 44; ++i) {
+    for(long i = 0; i < 44; ++i) {
         b1.shift_r1();
     }
     check(b1 == "36160779242655034212681122963");
     
     b1 = "472230091907516241534069172328070734397092";
-    for(long long i = 0; i < 90; ++i) {
+    for(long i = 0; i < 90; ++i) {
         b1.shift_r1();
     }
     check(b1 == "381464430361359");
     
     b1 = "442923821381792066644177625215599027102301";
-    for(long long i = 0; i < 23; ++i) {
+    for(long i = 0; i < 23; ++i) {
         b1.shift_r1();
     }
     check(b1 == "52800634072040565805933192398023489");
     
     b1 = "402056465322036086268871698396705258738696";
-    for(long long i = 0; i < 78; ++i) {
+    for(long i = 0; i < 78; ++i) {
         b1.shift_r1();
     }
     check(b1 == "1330293253063947756");
     
     b1 = "327727464714117819181130411557133480197298";
-    for(long long i = 0; i < 67; ++i) {
+    for(long i = 0; i < 67; ++i) {
         b1.shift_r1();
     }
     check(b1 == "2220767682663831474280");
     
     b1 = "569486969989306110804340118965701595138375";
-    for(long long i = 0; i < 55; ++i) {
+    for(long i = 0; i < 55; ++i) {
         b1.shift_r1();
     }
     check(b1 == "15806438657653579549343117");
     
     b1 = "473633998397521999071466903804273113054293";
-    for(long long i = 0; i < 2; ++i) {
+    for(long i = 0; i < 2; ++i) {
         b1.shift_r1();
     }
     check(b1 == "118408499599380499767866725951068278263573");
     
     b1 = "374102156219417583514427767434189128429658";
-    for(long long i = 0; i < 67; ++i) {
+    for(long i = 0; i < 67; ++i) {
         b1.shift_r1();
     }
     check(b1 == "2535014815653775676485");
     
     b1 = "539161706377639742777339123810020811112927";
-    for(long long i = 0; i < 30; ++i) {
+    for(long i = 0; i < 30; ++i) {
         b1.shift_r1();
     }
     check(b1 == "502133468517698108011241186233256");
     
     b1 = "557394160379633148152584187045018581683048";
-    for(long long i = 0; i < 61; ++i) {
+    for(long i = 0; i < 61; ++i) {
         b1.shift_r1();
     }
     check(b1 == "241731183845732776057761");
     
     b1 = "189740774468213263104606435709000822123788";
-    for(long long i = 0; i < 7; ++i) {
+    for(long i = 0; i < 7; ++i) {
         b1.shift_r1();
     }
     check(b1 == "1482349800532916118004737778976568922842");
@@ -3214,7 +3255,7 @@ void test037() {
     // b1 << -3;
     try {
         b1 << -3;
-        show("ERROR - can NOT get here - it should threw exception.\n");
+        show("ERROR - can NOT get here - it should have thrown an exception.\n");
         exit(EXIT_FAILURE);
     } catch(const bint_error& e) {
         show(e.what());
@@ -3223,7 +3264,7 @@ void test037() {
     
     try {
         b1 >> -25;
-        show("ERROR - can NOT get here - it should threw exception.\n");
+        show("ERROR - can NOT get here - it should have thrown an exception.\n");
         exit(EXIT_FAILURE);
     } catch(const std::exception& e) {
         show(e.what());
@@ -3232,7 +3273,7 @@ void test037() {
 
     try {
         b1 = "654654s321321";
-        show("ERROR - can NOT get here - it should threw exception.\n");
+        show("ERROR - can NOT get here - it should have thrown an exception.\n");
         exit(EXIT_FAILURE);
     } catch(const std::exception& e) {
         show(e.what());
